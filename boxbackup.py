@@ -63,6 +63,20 @@ def get_authenticated_client():
 def logout_client(client):
     """Should invalidate our session. To be called when done."""
     client.auth.revoke()
+
+def recurse_backup(box_folder, folder, follow_links=False):
+    """Takes in the current working box_folder and the current fs folder
+    under consideration"""
+    # TODO: recurse through folder, recreating structure under box_folder
+    # backup all items in folder to box_folder
+    # os.walk could be useful here too but I think it might be easier
+    # to keep track of state recursively
+    elements = os.listdir(folder)
+    for e in elements:
+        if os.path.isdir(os.path.join(folder,e)):
+            # directory: create box folder and recurse
+        elif os.path.isfile(os.path.join(folder,e)):
+            # file: backup
 def main():
     # TODO
     client = get_authenticated_client()
@@ -89,7 +103,7 @@ def main():
             #folder found get id
             for i in search_results:
                     if i.name == "iastateboxbackup":
-                        backup_root = client.folder(folder_id=i.id).get()
+                        backup_root = i
                         break
                     else:
                         continue
