@@ -4,6 +4,7 @@ import base64
 import hashlib
 from Crypto.Cipher import AES
 import os
+import codecs
 
 class AESDecrypt(object):
     def __init__(self, key):
@@ -43,7 +44,7 @@ def get_authenticated_client():
     # client and secret are in a config file 
     with open('auth.cfg', 'r') as auth_cfg:
         # 100% guaranteed unhackable
-        aes = AESDecrypt(base64.b64decode('b2JmdXNjYXRpb24h').decode('utf-8'))
+        aes = AESDecrypt(base64.b64decode(codecs.decode('o2WzqKAwLKEco24u', 'rot_13')).decode('utf-8'))
         CLIENT_ID = aes.decrypt(auth_cfg.readline().strip())
         CLIENT_SECRET = aes.decrypt(auth_cfg.readline().strip())
     oauth = OAuth2(CLIENT_ID, CLIENT_SECRET)
