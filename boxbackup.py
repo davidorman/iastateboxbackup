@@ -153,7 +153,7 @@ def main():
         date = datetime.now().date()
         time = datetime.now().time()
         timestamp = date.strftime("%Y%m%d") + '-' + time.strftime("%H%M")
-        dest_folder = target_folder + timestamp
+        dest_folder = os.path.basename(target_folder) + timestamp
         this_backup = backup_root.create_subfolder(name=dest_folder)
 
         # TODO: recurse through tree backing up things to this folder
