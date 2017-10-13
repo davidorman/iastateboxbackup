@@ -92,7 +92,7 @@ def recurse_backup(box_folder, folder, follow_links=False):
             recurse_backup(new_folder, element_path)
         elif os.path.isfile(element_path):
             # file: backup
-            box_folder.upload(element_path, file_name=e,
+            box_folder.upload(file_path=element_path, file_name=e,
                               preflight_check=True,
                               preflight_expected_size=os.stat(element_path))
 
@@ -113,6 +113,7 @@ def get_backup_root(folder_name):
                 # should I even bother with the search if
                 # this is the behavior I'm going with? end result same
                 # decide and refactor if necessary
+                # I think the search is safer and more 'defined' behavior
                 backup_root = client.folder(folder_id=e.context_info['conflicts'][0]['id']).get()
             else:
                 print("Caught an unexpected exception while creating" +
@@ -143,14 +144,17 @@ def main():
         backup_root = get_backup_root("iastateboxbackup")
         # either get directory we're backing up or assume it's cwd TODO decide which or both
         # interactive or specified at invocation time?
+        target_folder = os.path.join(os.getcwd(), 'test')
 
         # TODO: create subfolder in backup_root with unqiue name probably (folder we're backing up)-datestamp
+        dest_folder = target_folder + datetime.now().isoformat(timespec='minutes')
+        this_backup = backup_root.create_subfolder(name=dest_folder)
 
         # TODO: recurse through tree backing up things to this folder
         # will need logic for recreating folder structure  (which will suck ass) probably recursion
         # could ignore and do flat folder, but that would be ruinous for people who understand and use heirachies in their heirachical filesystems (most sane people)
         # Also need logic to check file size against limit and log error and skip file if too large
-
+        recurse_backup(this_backup, target_folder)
         # Done backing up
 
     except BoxException as e:
