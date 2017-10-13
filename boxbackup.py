@@ -6,6 +6,7 @@ from Crypto.Cipher import AES
 import os
 import codecs
 from datetime import datetime
+import argparse
 
 
 class AESDecrypt(object):
@@ -93,9 +94,21 @@ def recurse_backup(box_folder, folder, follow_links=False):
             recurse_backup(new_folder, element_path)
         elif os.path.isfile(element_path):
             # file: backup
-            box_folder.upload(file_path=element_path, file_name=e,
-                              preflight_check=True,
-                              preflight_expected_size=os.stat(element_path).st_size)
+            # size in bytes
+            file_size = os.stat(element_path).st_size
+            # if bigger than 100MiB
+            use_accelerator = file_size > (100 * 1024 ** 2)
+            print("Backing up: " + element_path)
+            try:
+                box_folder.upload(file_path=element_path, file_name=e,
+                                  preflight_check=True,
+                                  preflight_expected_size=file_size,
+                                  upload_using_accelerator=use_accelerator)
+            except BoxAPIException as ex:
+                # The most likely case is the file is too large
+                # Could also possibly already exist or similar
+                print("Skipping file: " + e + " due api error." +
+                      "Exception was: "+ ex)
 
 
 def get_backup_root(client, folder_name):
@@ -139,30 +152,32 @@ def get_backup_root(client, folder_name):
 
 
 def main():
-    # TODO
+    parser = argparse.ArgumentParser(description="Backup a directory to Box.")
+    parser.add_argument('directory', help="directory to backup to Box")
+    args = parser.parse_args()
+    target_folder = None
+    if os.path.exists(args.directory):
+        target_folder = args.directory
+    else:
+        raise BoxBackupException("Directory does not exist or is invalid")
+
     client = get_authenticated_client()
     try:
         print("Username: "+client.user(user_id='me').get()['login'])
         # for now let's assume that we always backup to the same folder and just create a subfolder within it that is this backup
         backup_root = get_backup_root(client, "iastateboxbackup")
-        # either get directory we're backing up or assume it's cwd TODO decide which or both
-        # interactive or specified at invocation time?
-        target_folder = os.path.join(os.getcwd(), 'test')
-
-        # TODO: create subfolder in backup_root with unqiue name probably (folder we're backing up)-datestamp
+        # create subfolder in backup_root with unqiue name 
         date = datetime.now().date()
         time = datetime.now().time()
         timestamp = date.strftime("%Y%m%d") + '-' + time.strftime("%H%M")
-        dest_folder = os.path.basename(target_folder) + timestamp
+        # target_folder-timestamp
+        dest_folder = os.path.basename(target_folder) + "-" + timestamp
         this_backup = backup_root.create_subfolder(name=dest_folder)
-
-        # TODO: recurse through tree backing up things to this folder
-        # will need logic for recreating folder structure  (which will suck ass) probably recursion
-        # could ignore and do flat folder, but that would be ruinous for people who understand and use heirachies in their heirachical filesystems (most sane people)
-        # Also need logic to check file size against limit and log error and skip file if too large
+        print("Beginning backup of " + target_folder +
+              " to Box folder iastateboxbackup/" + dest_folder)
+        # recurse through tree backing up things to this folder
         recurse_backup(this_backup, target_folder)
         # Done backing up
-
     except BoxException as e:
         print("Caught a Box exception: "+e)
     # done
