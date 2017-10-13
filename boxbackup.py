@@ -81,7 +81,7 @@ def recurse_backup(box_folder, folder, follow_links=False):
     # os.walk could be useful here too but I think it might be easier
     # to keep track of state recursively
     elements = os.listdir(folder)
-    if not e:
+    if not elements:
         # probably a good enough basecase
         return
 
