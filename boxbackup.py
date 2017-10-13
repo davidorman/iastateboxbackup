@@ -155,8 +155,7 @@ def main():
     parser = argparse.ArgumentParser(description="Backup a directory to Box.")
     parser.add_argument('directory', help="directory to backup to Box")
     args = parser.parse_args()
-    target_folder = None
-    if os.path.exists(args.directory):
+    if args.directory and os.path.exists(args.directory):
         target_folder = args.directory
     else:
         raise BoxBackupException("Directory does not exist or is invalid")
@@ -171,7 +170,7 @@ def main():
         time = datetime.now().time()
         timestamp = date.strftime("%Y%m%d") + '-' + time.strftime("%H%M")
         # target_folder-timestamp
-        dest_folder = os.path.basename(target_folder) + "-" + timestamp
+        dest_folder = os.path.basename(os.path.normpath(target_folder)) + "-" + timestamp
         this_backup = backup_root.create_subfolder(name=dest_folder)
         print("Beginning backup of " + target_folder +
               " to Box folder iastateboxbackup/" + dest_folder)
