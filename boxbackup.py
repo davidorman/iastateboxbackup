@@ -53,8 +53,7 @@ def get_authenticated_client():
         CLIENT_ID = aes.decrypt(auth_cfg.readline().strip())
         CLIENT_SECRET = aes.decrypt(auth_cfg.readline().strip())
     oauth = OAuth2(CLIENT_ID, CLIENT_SECRET)
-    auth_url, csrf_token =
-    oauth.get_authorization_url("https://iastateboxbackup")
+    auth_url, csrf_token = oauth.get_authorization_url("https://iastateboxbackup")
     # ask user to go to the url and authorize our app
     print("Please go to "+auth_url+" in your web browser.\n\n" +
           " You will be asked to authorize this app." +
@@ -99,11 +98,14 @@ def recurse_backup(box_folder, folder, follow_links=False):
                               preflight_expected_size=os.stat(element_path))
 
 
-def get_backup_root(folder_name):
+def get_backup_root(client, folder_name):
     """get a box folder that is to be the backup_root, create if not found"""
     backup_root = None
+    root = client.folder(folder_id='0')
     # check if folder_name exists
-    search _results = client.search(query=folder_name, limit=100, offset=1,
+    search_results = client.search(query=folder_name,
+                                    limit=100,
+                                    offset=1,
                                     result_type='folder')
     if not search_results:
         # no results does not necessarily mean the folder doesn't exist
@@ -142,8 +144,7 @@ def main():
     try:
         print("Username: "+client.user(user_id='me').get()['login'])
         # for now let's assume that we always backup to the same folder and just create a subfolder within it that is this backup
-        root = client.folder(folder_id='0')
-        backup_root = get_backup_root("iastateboxbackup")
+        backup_root = get_backup_root(client, "iastateboxbackup")
         # either get directory we're backing up or assume it's cwd TODO decide which or both
         # interactive or specified at invocation time?
         target_folder = os.path.join(os.getcwd(), 'test')
