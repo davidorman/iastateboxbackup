@@ -105,7 +105,7 @@ def get_backup_root(client, folder_name):
     # check if folder_name exists
     search_results = client.search(query=folder_name,
                                     limit=100,
-                                    offset=1,
+                                    offset=0,
                                     result_type='folder')
     if not search_results:
         # no results does not necessarily mean the folder doesn't exist
