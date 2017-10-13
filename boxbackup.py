@@ -95,7 +95,7 @@ def recurse_backup(box_folder, folder, follow_links=False):
             # file: backup
             box_folder.upload(file_path=element_path, file_name=e,
                               preflight_check=True,
-                              preflight_expected_size=os.stat(element_path))
+                              preflight_expected_size=os.stat(element_path).st_size)
 
 
 def get_backup_root(client, folder_name):
